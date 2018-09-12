@@ -1,7 +1,23 @@
-﻿// F# の詳細については、http://fsharp.org を参照してください
-// 詳細については、'F# チュートリアル' プロジェクトを参照してください。
+﻿open System
+open System.IO
+open System.Runtime.InteropServices
+open Microsoft.Win32.SafeHandles
+
+module Interop =
+    [<DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)>]
+    extern SafeFileHandle CreateFile(
+        [<MarshalAs(UnmanagedType.LPTStr)>] string filename,
+        [<MarshalAs(UnmanagedType.U4)>] FileAccess access,
+        [<MarshalAs(UnmanagedType.U4)>] FileShare share,
+        IntPtr securityAttributes,
+        [<MarshalAs(UnmanagedType.U4)>] FileMode creationDisposition,
+        [<MarshalAs(UnmanagedType.U4)>] FileAttributes flagsAndAttributes,
+        IntPtr templateFile
+    )
 
 [<EntryPoint>]
 let main argv = 
-    printfn "%A" argv
-    0 // 整数の終了コードを返します
+    let safeFileHandle =
+        Interop.CreateFile("test.db", FileAccess.Write, FileShare.None, IntPtr.Zero, FileMode.Create, FileAttributes.Normal, IntPtr.Zero)
+    safeFileHandle.Close()
+    0
