@@ -2,15 +2,16 @@
 nuget Fake.IO.FileSystem
 nuget Fake.DotNet.MSBuild
 nuget Fake.Core.Target //"
-#load "./.fake/build.fsx/intellisense.fsx"
+#load ".fake/build.fsx/intellisense.fsx"
 
 open System.IO
 open System.Text
 open Fake.Core
-open Fake.IO.Globbing.Operators
 open Fake.DotNet
-open Fake.IO.Globbing
+open Fake.IO
 open Fake.IO.FileSystemOperators
+open Fake.IO.Globbing.Operators
+open Fake.Core.TargetOperators
 
 Target.create "BuildSrc" (fun _ ->
     !! "src/**/*.fsproj"
@@ -49,7 +50,21 @@ Target.create "Test" (fun _ ->
     __.MarkSuccess()
 )
 
-open Fake.Core.TargetOperators
+Target.create "Clean" (fun _ ->
+    !! "src/**/bin"
+    ++ "src/**/obj"
+    |> Shell.cleanDirs 
+)
 
-"BuildTest"
-    ==> "Test"
+Target.create "Build" (fun _ ->
+    !! "src/**/*.*proj"
+    |> Seq.iter (DotNet.build id)
+)
+
+Target.create "All" ignore
+
+"Clean"
+  ==> "Build"
+  ==> "All"
+
+Target.runOrDefault "All"
